@@ -1,8 +1,10 @@
-// TODO change this interface with the details that you want on each report line
 export interface ReportLine {
+  filename: string
   name: string
+  namespace: string
   kind: string
   version: string
+  check: string
   message: string
-  filename: string
+  remediation: string
 }

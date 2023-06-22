@@ -49,7 +49,7 @@ const constants_1 = __nccwpck_require__(2868);
 const check_reporter_1 = __nccwpck_require__(3904);
 const summary_reporter_1 = __nccwpck_require__(1178);
 const core = __importStar(__nccwpck_require__(2186));
-const kubeconform_report_generator_1 = __nccwpck_require__(649);
+const kube_linter_report_generator_1 = __nccwpck_require__(6097);
 const utils_1 = __nccwpck_require__(1520);
 const NOT_IN_PR_CONTEXT_WARNING = "Selected 'pr-comment' mode but the action is not running in a pull request context. Switching to 'summary' mode.";
 class ActionOrchestrator {
@@ -88,7 +88,7 @@ class ActionOrchestrator {
             this.inputs = inputs;
             const reporter = yield this.getReporter();
             try {
-                const reportGenerator = kubeconform_report_generator_1.KubeconformReportGenerator.getInstance();
+                const reportGenerator = kube_linter_report_generator_1.KubeLinterReportGenerator.getInstance();
                 const reportResult = yield reportGenerator.generateReport(this.inputs.file, { showFilename: this.inputs.showFilename });
                 yield reporter.report(reportResult);
             }
@@ -111,10 +111,8 @@ exports.ActionOrchestrator = ActionOrchestrator;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CHECK_NAME = exports.APPLICATION_NAME = void 0;
-// TODO change to your application name (e.g. kubeconform-reporter)
-exports.APPLICATION_NAME = 'kubeconfrom-reporter';
-// TODO change to your check name (e.g. Kubeconform Check)
-exports.CHECK_NAME = 'Kubeconform Check';
+exports.APPLICATION_NAME = 'kube-linter-reporter';
+exports.CHECK_NAME = 'KubeLinter Check';
 
 
 /***/ }),
@@ -442,7 +440,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.gatherInputs = exports.ModeOption = exports.Input = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const utils_1 = __nccwpck_require__(1520);
-// TODO Add or change inputs as required
 var Input;
 (function (Input) {
     Input["FILE"] = "file";
@@ -457,7 +454,6 @@ var ModeOption;
     ModeOption["SUMMARY"] = "summary";
 })(ModeOption || (exports.ModeOption = ModeOption = {}));
 function gatherInputs() {
-    // TODO adapt method to return your changed inputs if required
     const file = getInputFile();
     const mode = getInputMode();
     const token = getInputToken();
@@ -487,8 +483,6 @@ function getInputMode() {
 function getInputToken() {
     return core.getInput(Input.GITHUB_TOKEN, { required: true });
 }
-// TODO Add methods for your extra inputs
-// Pattern: function getInput<input-name>(): <type>
 
 
 /***/ }),
@@ -567,10 +561,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CheckReporter = void 0;
-// TODO change with a FAIL message for your summary
-const FAIL_SUMMARY = 'Manifests found that are not valid!';
-// TODO change with a SUCCESS message for your summary
-const SUCCESS_SUMMARY = 'No invalid manifests!';
+const FAIL_SUMMARY = 'KubeLinter - Manifests found that are not valid!';
+const SUCCESS_SUMMARY = 'KubeLinter - No invalid manifests!';
 class CheckReporter {
     constructor(gitHubCheck) {
         this.gitHubCheck = gitHubCheck;
@@ -622,7 +614,7 @@ exports.CommentReporter = CommentReporter;
 
 /***/ }),
 
-/***/ 649:
+/***/ 6097:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -660,43 +652,48 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.KubeconformReportGenerator = void 0;
+exports.KubeLinterReportGenerator = void 0;
 const fs = __importStar(__nccwpck_require__(3292));
 const utils_1 = __nccwpck_require__(1316);
-// TODO change all constants below with your reporting format and messages
-const HEADER = (showFilename) => `${showFilename ? '| Filename ' : ''}| Name | Kind | Version | Message |`;
-const HEADER_ALIGNMENT = (showFilename) => `${showFilename ? '|-' : ''}|-|-|-|-|`;
+const HEADER = (showFilename) => `${showFilename ? '| Filename ' : ''}| Name | Namespace | Kind | Version | Check | Message | Remediation |`;
+const HEADER_ALIGNMENT = (showFilename) => `${showFilename ? '|-' : ''}|-|-|-|-|-|-|-|`;
 const FILE_ENCODING = 'utf-8';
-const SUCCESS_COMMENT = '# :white_check_mark: All Kubernetes manifests are valid!';
-const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!';
-// TODO change this class with and implementation for your report generator
-class KubeconformReportGenerator {
+const SUCCESS_COMMENT = '# :white_check_mark: KubeLinter - All Kubernetes manifests are valid!';
+const FAIL_COMMENT = '# :x: KubeLinter - Invalid Kubernetes manifests found!';
+class KubeLinterReportGenerator {
     constructor() { }
+    makeCheckLink(checkName) {
+        return `[${(0, utils_1.noBreak)(checkName)}](https://github.com/stackrox/kube-linter/blob/main/docs/generated/checks.md#${checkName})`;
+    }
     makeReportLine(line, properties) {
         const filename = properties.showFilename
             ? `| ${(0, utils_1.noBreak)(line.filename)} `
             : '';
-        return `${filename}| ${(0, utils_1.noBreak)(line.name)} | ${(0, utils_1.noBreak)(line.kind)} | ${(0, utils_1.noBreak)(line.version)} | ${line.message} |`;
+        return `${filename}| ${(0, utils_1.noBreak)(line.name)} | ${(0, utils_1.noBreak)(line.namespace)} | ${(0, utils_1.noBreak)(line.kind)} | ${(0, utils_1.noBreak)(line.version)} | ${this.makeCheckLink(line.check)} | ${line.message} | ${line.remediation} |`;
     }
     generateReport(path, properties) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield fs.readFile(path, FILE_ENCODING);
-            const kubeconformResult = JSON.parse(result);
+            const kubeLinterResult = JSON.parse(result);
             const reportTable = [];
-            const resources = (_a = kubeconformResult.resources) !== null && _a !== void 0 ? _a : [];
-            if (resources.length <= 0)
+            const reports = (_a = kubeLinterResult.Reports) !== null && _a !== void 0 ? _a : [];
+            if (reports.length <= 0)
                 return { report: SUCCESS_COMMENT, failed: false };
             reportTable.push(FAIL_COMMENT);
             reportTable.push(HEADER(properties.showFilename));
             reportTable.push(HEADER_ALIGNMENT(properties.showFilename));
-            for (const resource of resources) {
+            for (const report of reports) {
+                const groupVersionKind = report.Object.K8sObject.GroupVersionKind;
                 const line = {
-                    name: resource.name,
-                    kind: resource.kind,
-                    version: resource.version,
-                    message: resource.msg,
-                    filename: resource.filename
+                    filename: report.Object.Metadata.FilePath,
+                    name: report.Object.K8sObject.Name,
+                    namespace: report.Object.K8sObject.Namespace,
+                    kind: groupVersionKind.Kind,
+                    version: `${groupVersionKind.Group}/${groupVersionKind.Version}`,
+                    check: report.Check,
+                    message: report.Diagnostic.Message,
+                    remediation: report.Remediation
                 };
                 reportTable.push(this.makeReportLine(line, properties));
             }
@@ -704,13 +701,13 @@ class KubeconformReportGenerator {
         });
     }
     static getInstance() {
-        if (!KubeconformReportGenerator.instance) {
-            KubeconformReportGenerator.instance = new KubeconformReportGenerator();
+        if (!KubeLinterReportGenerator.instance) {
+            KubeLinterReportGenerator.instance = new KubeLinterReportGenerator();
         }
-        return KubeconformReportGenerator.instance;
+        return KubeLinterReportGenerator.instance;
     }
 }
-exports.KubeconformReportGenerator = KubeconformReportGenerator;
+exports.KubeLinterReportGenerator = KubeLinterReportGenerator;
 
 
 /***/ }),
