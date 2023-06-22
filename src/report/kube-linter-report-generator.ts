@@ -14,8 +14,8 @@ const HEADER_ALIGNMENT = (showFilename: boolean): string =>
   `${showFilename ? '|-' : ''}|-|-|-|-|-|-|-|`
 const FILE_ENCODING = 'utf-8'
 const SUCCESS_COMMENT =
-  '# :white_check_mark: All Kubernetes manifests are valid!'
-const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!'
+  '# :white_check_mark: KubeLinter - All Kubernetes manifests are valid!'
+const FAIL_COMMENT = '# :x: KubeLinter - Invalid Kubernetes manifests found!'
 
 export class KubeLinterReportGenerator implements ReportGenerator {
   private constructor() {}

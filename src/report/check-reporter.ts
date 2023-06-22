@@ -2,8 +2,8 @@ import {GitHubCheck} from '../github/check'
 import {Reporter} from './reporter'
 import {ReportResult} from '../model/report-result'
 
-const FAIL_SUMMARY = 'Manifests found that are not valid!'
-const SUCCESS_SUMMARY = 'No invalid manifests!'
+const FAIL_SUMMARY = 'KubeLinter - Manifests found that are not valid!'
+const SUCCESS_SUMMARY = 'KubeLinter - No invalid manifests!'
 
 export class CheckReporter implements Reporter {
   private gitHubCheck: GitHubCheck

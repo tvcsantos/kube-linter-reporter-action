@@ -561,8 +561,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CheckReporter = void 0;
-const FAIL_SUMMARY = 'Manifests found that are not valid!';
-const SUCCESS_SUMMARY = 'No invalid manifests!';
+const FAIL_SUMMARY = 'KubeLinter - Manifests found that are not valid!';
+const SUCCESS_SUMMARY = 'KubeLinter - No invalid manifests!';
 class CheckReporter {
     constructor(gitHubCheck) {
         this.gitHubCheck = gitHubCheck;
@@ -658,8 +658,8 @@ const utils_1 = __nccwpck_require__(1316);
 const HEADER = (showFilename) => `${showFilename ? '| Filename ' : ''}| Name | Namespace | Kind | Version | Check | Message | Remediation |`;
 const HEADER_ALIGNMENT = (showFilename) => `${showFilename ? '|-' : ''}|-|-|-|-|-|-|-|`;
 const FILE_ENCODING = 'utf-8';
-const SUCCESS_COMMENT = '# :white_check_mark: All Kubernetes manifests are valid!';
-const FAIL_COMMENT = '# :x: Invalid Kubernetes manifests found!';
+const SUCCESS_COMMENT = '# :white_check_mark: KubeLinter - All Kubernetes manifests are valid!';
+const FAIL_COMMENT = '# :x: KubeLinter - Invalid Kubernetes manifests found!';
 class KubeLinterReportGenerator {
     constructor() { }
     makeCheckLink(checkName) {
