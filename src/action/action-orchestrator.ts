@@ -9,7 +9,7 @@ import {CheckReporter} from '../report/check-reporter'
 import {SummaryReporter} from '../report/summary-reporter'
 import * as core from '@actions/core'
 import {GitHub} from '@actions/github/lib/utils'
-import {KubeconformReportGenerator} from '../report/kubeconform-report-generator'
+import {KubeLinterReportGenerator} from '../report/kube-linter-report-generator'
 import {ContextExtensions} from '../github/utils'
 
 const NOT_IN_PR_CONTEXT_WARNING =
@@ -58,7 +58,7 @@ export class ActionOrchestrator {
     this.inputs = inputs
     const reporter = await this.getReporter()
     try {
-      const reportGenerator = KubeconformReportGenerator.getInstance()
+      const reportGenerator = KubeLinterReportGenerator.getInstance()
       const reportResult = await reportGenerator.generateReport(
         this.inputs.file,
         {showFilename: this.inputs.showFilename}

@@ -1,8 +1,8 @@
 {
-  "name": "tool-reporter-action-template",
+  "name": "kube-linter-reporter-action",
   "version": "1.0.0",
   "private": true,
-  "description": "A template GitHub action for generating reports for tools (e.g. linters)",
+  "description": "A GitHub action for generating reports for KubeLinter",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tvcsantos/tool-reporter-action-template.git"
+    "url": "git+https://github.com/tvcsantos/kube-linter-reporter-action.git"
   },
   "keywords": [
     "actions",

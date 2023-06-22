@@ -14,12 +14,12 @@ jobs:
       matrix:
         show-filename: [true, false]
         mode: [pr-comment, check, summary]
-        file: [kubeconform-result-error.json, kubeconform-result-ok.json]
+        file: [kube-linter-result-error.json, kube-linter-result-ok.json]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Kubeconform reporter test
+      - name: KubeLinter reporter test
         uses: ./
         with:
           file: ./__tests__/${{ matrix.file }}

@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import {contextExt} from '../github/utils'
 
-// TODO Add or change inputs as required
 export interface Inputs {
   file: string
   mode: ModeOption
@@ -9,7 +8,6 @@ export interface Inputs {
   showFilename: boolean
 }
 
-// TODO Add or change inputs as required
 export enum Input {
   FILE = 'file',
   SHOW_FILENAME = 'show-filename',
@@ -24,7 +22,6 @@ export enum ModeOption {
 }
 
 export function gatherInputs(): Inputs {
-  // TODO adapt method to return your changed inputs if required
   const file = getInputFile()
   const mode = getInputMode()
   const token = getInputToken()
@@ -59,6 +56,3 @@ function getInputMode(): ModeOption {
 function getInputToken(): string {
   return core.getInput(Input.GITHUB_TOKEN, {required: true})
 }
-
-// TODO Add methods for your extra inputs
-// Pattern: function getInput<input-name>(): <type>
