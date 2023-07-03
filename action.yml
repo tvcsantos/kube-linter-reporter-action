@@ -17,7 +17,7 @@ inputs:
   mode:
     required: false
     description: |-
-      One of the following values:
+      A multi-line input with the following values:
       - pr-comment - report will be added as a comment on PR.
       - check - report will be added in a GitHub check.
       - summary - report will be added as a summary.
@@ -25,6 +25,10 @@ inputs:
     required: true
     description: 'Your GitHub token'
     default: ${{ github.token }}
+  fail-on-error:
+    required: false
+    description: 'Fail the action if errors are found on the report'
+    default: 'false'
 runs:
   using: 'node16'
   main: 'dist/index.js'
