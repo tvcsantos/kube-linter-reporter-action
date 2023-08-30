@@ -14,7 +14,7 @@ inputs:
     description: |-
       Show references to filenames that have errors in the report
     default: 'true'
-  mode:
+  modes:
     required: false
     description: |-
       A multi-line input with the following values:
