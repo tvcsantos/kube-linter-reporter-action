@@ -1,8 +1,10 @@
-import {Reporter} from './reporter'
-import {GitHubPRCommenter} from '../github/comment'
-import {ReportResult} from '../model/report-result'
+import { Reporter } from './reporter'
+import { GitHubPRCommenter } from '../github/comment'
+import { ReportResult } from '../model/report-result'
 
 export class CommentReporter implements Reporter {
+  maxSize = null
+
   private gitHubPRCommenter: GitHubPRCommenter
 
   constructor(gitHubPRCommenter: GitHubPRCommenter) {

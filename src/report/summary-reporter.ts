@@ -1,8 +1,10 @@
-import {summary} from '@actions/core'
-import {Reporter} from './reporter'
-import {ReportResult} from '../model/report-result'
+import { summary } from '@actions/core'
+import { Reporter } from './reporter'
+import { ReportResult } from '../model/report-result'
 
 export class SummaryReporter implements Reporter {
+  maxSize = null
+
   private theSummary: typeof summary
   constructor(theSummary: typeof summary) {
     this.theSummary = theSummary
