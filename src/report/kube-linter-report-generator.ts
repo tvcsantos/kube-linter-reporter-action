@@ -1,10 +1,10 @@
-import * as fs from 'fs/promises'
-import {ReportLine} from '../model/report-line'
-import {ReportResult} from '../model/report-result'
-import {ReportGenerator} from './report-generator'
-import {ReportProperties} from './report-properties'
-import {noBreak} from '../utils/utils'
-import {KubeLinterResult, ReportsProperties} from '../model/kube-linter'
+import { ReportLine } from '../model/report-line'
+import { ReportResult } from '../model/report-result'
+import { ReportGenerator } from './report-generator'
+import { ReportProperties } from './report-properties'
+import { noBreak } from '../utils/utils'
+import { KubeLinterResult, ReportsProperties } from '../model/kube-linter'
+import { TextBuilder } from './text-builder'
 
 const HEADER = (showFilename: boolean): string =>
   `${
@@ -12,12 +12,13 @@ const HEADER = (showFilename: boolean): string =>
   }| Name | Namespace | Kind | Version | Check | Message | Remediation |`
 const HEADER_ALIGNMENT = (showFilename: boolean): string =>
   `${showFilename ? '|-' : ''}|-|-|-|-|-|-|-|`
-const FILE_ENCODING = 'utf-8'
 const SUCCESS_COMMENT =
   '# :white_check_mark: KubeLinter - All Kubernetes manifests are valid!'
 const FAIL_COMMENT = '# :x: KubeLinter - Invalid Kubernetes manifests found!'
 
-export class KubeLinterReportGenerator implements ReportGenerator {
+export class KubeLinterReportGenerator
+  implements ReportGenerator<KubeLinterResult>
+{
   private constructor() {}
 
   private makeCheckLink(checkName: string): string {
@@ -42,39 +43,69 @@ export class KubeLinterReportGenerator implements ReportGenerator {
     } |`
   }
 
-  async generateReport(
-    path: string,
-    properties: ReportProperties
-  ): Promise<ReportResult> {
-    const result = await fs.readFile(path, FILE_ENCODING)
-    const kubeLinterResult = JSON.parse(result) as KubeLinterResult
+  private addTitleToTextBuilder(textBuilder: TextBuilder): void {
+    textBuilder.addLines(FAIL_COMMENT)
+  }
 
-    const reportTable: string[] = []
+  private addHeaderToTextBuilder(
+    textBuilder: TextBuilder,
+    reportProperties: ReportProperties
+  ): void {
+    textBuilder.addLines(
+      HEADER(reportProperties.showFilename),
+      HEADER_ALIGNMENT(reportProperties.showFilename)
+    )
+  }
 
-    const reports: ReportsProperties[] = kubeLinterResult.Reports ?? []
-
-    if (reports.length <= 0) return {report: SUCCESS_COMMENT, failed: false}
-
-    reportTable.push(FAIL_COMMENT)
-    reportTable.push(HEADER(properties.showFilename))
-    reportTable.push(HEADER_ALIGNMENT(properties.showFilename))
-
-    for (const report of reports) {
-      const groupVersionKind = report.Object.K8sObject.GroupVersionKind
+  private async addContentToTextBuilder(
+    textBuilder: TextBuilder,
+    entries: ReportsProperties[],
+    reportProperties: ReportProperties
+  ): Promise<boolean> {
+    let isContentTruncated = false
+    for (const entry of entries) {
+      const groupVersionKind = entry.Object.K8sObject.GroupVersionKind
       const line: ReportLine = {
-        filename: report.Object.Metadata.FilePath,
-        name: report.Object.K8sObject.Name,
-        namespace: report.Object.K8sObject.Namespace,
+        filename: entry.Object.Metadata.FilePath,
+        name: entry.Object.K8sObject.Name,
+        namespace: entry.Object.K8sObject.Namespace,
         kind: groupVersionKind.Kind,
         version: `${groupVersionKind.Group}/${groupVersionKind.Version}`,
-        check: report.Check,
-        message: report.Diagnostic.Message,
-        remediation: report.Remediation
+        check: entry.Check,
+        message: entry.Diagnostic.Message,
+        remediation: entry.Remediation
       }
-      reportTable.push(this.makeReportLine(line, properties))
+      const theReportLine = this.makeReportLine(line, reportProperties)
+      const addedLines = textBuilder.tryAddLines(theReportLine)
+      if (!addedLines) {
+        isContentTruncated = true
+        break
+      }
+    }
+    return isContentTruncated
+  }
+
+  async generateReport(
+    reportData: KubeLinterResult,
+    properties: ReportProperties
+  ): Promise<ReportResult> {
+    const reports: ReportsProperties[] = reportData.Reports ?? []
+
+    if (reports.length <= 0) {
+      return { report: SUCCESS_COMMENT, failed: false, truncated: false }
     }
 
-    return {report: reportTable.join('\n'), failed: true}
+    const textBuilder = new TextBuilder(properties.maxSize)
+
+    this.addTitleToTextBuilder(textBuilder)
+    this.addHeaderToTextBuilder(textBuilder, properties)
+    const result = await this.addContentToTextBuilder(
+      textBuilder,
+      reports,
+      properties
+    )
+
+    return { report: textBuilder.build(), failed: true, truncated: result }
   }
 
   private static instance: KubeLinterReportGenerator | null

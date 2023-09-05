@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {contextExt} from '../github/utils'
+import { extendedContext } from '../github/extended-context'
 
 export interface Inputs {
   file: string
@@ -29,11 +29,11 @@ export function gatherInputs(): Inputs {
   const token = getInputToken()
   const showFilename = getInputShowFilename()
   const failOnError = getInputFailOnError()
-  return {file, modes, token, showFilename, failOnError}
+  return { file, modes, token, showFilename, failOnError }
 }
 
 function getInputFile(): string {
-  return core.getInput(Input.FILE, {required: true})
+  return core.getInput(Input.FILE, { required: true })
 }
 
 function getInputShowFilename(): boolean {
@@ -63,7 +63,7 @@ const NO_ADDITIONAL_MODE_SELECTED_USE_CHECK =
 
 function getInputModes(): Set<ModeOption> {
   const modes = new Set(internalGetInputModes())
-  const isPullRequest = contextExt.isPullRequest()
+  const isPullRequest = extendedContext.isPullRequest()
   if (modes.size <= 0) {
     if (isPullRequest) {
       modes.add(ModeOption.PR_COMMENT)
@@ -82,7 +82,7 @@ function getInputModes(): Set<ModeOption> {
 }
 
 function getInputToken(): string {
-  return core.getInput(Input.GITHUB_TOKEN, {required: true})
+  return core.getInput(Input.GITHUB_TOKEN, { required: true })
 }
 
 function getInputFailOnError(): boolean {
