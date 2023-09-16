@@ -1,7 +1,7 @@
 {
   "name": "kube-linter-reporter-action",
   "description": "A GitHub action for generating reports for KubeLinter",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "author": "tvcsantos",
   "private": true,
   "homepage": "https://github.com/tvcsantos/kube-linter-reporter-action",
@@ -27,8 +27,8 @@
   "scripts": {
     "bundle": "npm run format:write && npm run package",
     "ci-test": "jest --passWithNoTests",
-    "format:write": "prettier --write '**/*.ts'",
-    "format:check": "prettier --check '**/*.ts'",
+    "format:write": "prettier --write **/*.ts",
+    "format:check": "prettier --check **/*.ts",
     "lint": "npx eslint . -c ./.github/linters/.eslintrc.yml",
     "package": "ncc build src/index.ts --license licenses.txt",
     "package:watch": "npm run package -- --watch",
@@ -73,7 +73,7 @@
     "@types/jest": "^29.5.4",
     "@types/node": "^20.6.2",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
-    "@typescript-eslint/parser": "^6.6.0",
+    "@typescript-eslint/parser": "^6.7.0",
     "@vercel/ncc": "^0.38.0",
     "eslint": "^8.49.0",
     "eslint-plugin-github": "^4.10.0",
