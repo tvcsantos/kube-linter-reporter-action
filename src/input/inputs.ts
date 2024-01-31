@@ -7,6 +7,7 @@ export interface Inputs {
   token: string
   showFilename: boolean
   failOnError: boolean
+  commentPrOnSuccess: boolean
 }
 
 export enum Input {
@@ -14,7 +15,8 @@ export enum Input {
   SHOW_FILENAME = 'show-filename',
   MODES = 'modes',
   GITHUB_TOKEN = 'token',
-  FAIL_ON_ERROR = 'fail-on-error'
+  FAIL_ON_ERROR = 'fail-on-error',
+  COMMENT_PR_ON_SUCCESS = 'comment-pr-on-success'
 }
 
 export enum ModeOption {
@@ -29,7 +31,8 @@ export function gatherInputs(): Inputs {
   const token = getInputToken()
   const showFilename = getInputShowFilename()
   const failOnError = getInputFailOnError()
-  return { file, modes, token, showFilename, failOnError }
+  const commentPrOnSuccess = getInputCommentPrOnSuccess()
+  return { file, modes, token, showFilename, failOnError, commentPrOnSuccess }
 }
 
 function getInputFile(): string {
@@ -88,3 +91,12 @@ function getInputToken(): string {
 function getInputFailOnError(): boolean {
   return core.getBooleanInput(Input.FAIL_ON_ERROR)
 }
+
+function getInputCommentPrOnSuccess(): boolean {
+  const input = core.getInput(Input.COMMENT_PR_ON_SUCCESS)?.toLowerCase()
+  if (!input) return true
+  return input === 'true'
+}
+
+// Add methods for your extra inputs
+// Pattern: function getInput<input-name>(): <type>

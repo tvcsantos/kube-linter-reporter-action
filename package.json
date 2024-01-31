@@ -1,7 +1,7 @@
 {
   "name": "kube-linter-reporter-action",
   "description": "A GitHub action for generating reports for KubeLinter",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "author": "tvcsantos",
   "private": true,
   "homepage": "https://github.com/tvcsantos/kube-linter-reporter-action",
