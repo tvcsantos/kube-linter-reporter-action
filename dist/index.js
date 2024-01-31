@@ -9678,18 +9678,18 @@ const extended_context_1 = __nccwpck_require__(3634);
 const kube_linter_report_generator_1 = __nccwpck_require__(7770);
 const FILE_ENCODING = 'utf-8';
 class ActionOrchestrator {
+    octokit;
     gitHubCheck = null;
     inputs;
     getOctokit() {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
         return github.getOctokit(this.inputs.token);
     }
-    async getReporter(mode) {
+    async getReporter(mode, commentPrOnSuccess) {
         switch (mode) {
             case inputs_1.ModeOption.PR_COMMENT:
-                return new comment_reporter_1.CommentReporter(new comment_1.GitHubPRCommenter(constants_1.APPLICATION_NAME, this.getOctokit(), extended_context_1.extendedContext));
+                return new comment_reporter_1.CommentReporter(new comment_1.GitHubPRCommenter(constants_1.APPLICATION_NAME, this.octokit, extended_context_1.extendedContext), commentPrOnSuccess);
             case inputs_1.ModeOption.CHECK: {
-                const gitHubCheckCreator = new check_1.GitHubCheckCreator(this.getOctokit(), extended_context_1.extendedContext);
+                const gitHubCheckCreator = new check_1.GitHubCheckCreator(this.octokit, extended_context_1.extendedContext);
                 this.gitHubCheck = await gitHubCheckCreator.create(constants_1.CHECK_NAME);
                 return new check_reporter_1.CheckReporter(this.gitHubCheck);
             }
@@ -9698,16 +9698,15 @@ class ActionOrchestrator {
         }
     }
     async getReporters() {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
         const modes = this.inputs.modes;
+        const commentPrOnSuccess = this.inputs.commentPrOnSuccess;
         const result = [];
         for (const mode of modes) {
-            result.push(await this.getReporter(mode));
+            result.push(await this.getReporter(mode, commentPrOnSuccess));
         }
         return result;
     }
     async parseReport() {
-        // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
         const fileContents = await promises_1.default.readFile(this.inputs.file, {
             encoding: FILE_ENCODING
         });
@@ -9721,19 +9720,19 @@ class ActionOrchestrator {
             let reportResult = reportResults.get(reporter.maxSize);
             if (reportResult === undefined) {
                 reportResult = await reportGenerator.generateReport(reportData, {
-                    // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
-                    showFilename: this.inputs.showFilename,
-                    maxSize: reporter.maxSize ?? undefined
+                    maxSize: reporter.maxSize ?? undefined,
+                    showFilename: this.inputs.showFilename
                 });
                 reportResults.set(reporter.maxSize, reportResult);
             }
-            failed &&= reportResult.failed;
+            failed ||= reportResult.failed;
             await reporter.report(reportResult);
         }
         return failed;
     }
     async execute(inputs) {
         this.inputs = inputs;
+        this.octokit = this.getOctokit();
         const reporters = await this.getReporters();
         try {
             const report = await this.parseReport();
@@ -9918,6 +9917,9 @@ class GitHubPRCommenter {
         this.applicationName = applicationName;
         this.octokit = octokit;
         this.context = context;
+        this.applicationName = applicationName;
+        this.octokit = octokit;
+        this.context = context;
         this.commentPreface = getCommentPreface(applicationName);
     }
     async comment(data) {
@@ -9935,6 +9937,8 @@ class GitHubPRCommenter {
             const firstLine = comment.body?.split('\r\n')[0];
             if (firstLine === this.commentPreface) {
                 core.debug(`Existing comment from ${this.applicationName} found. Attempting to delete it...`);
+                // This can be async, we don't need to wait for it
+                // noinspection ES6MissingAwait
                 this.octokit.rest.issues.deleteComment({
                     comment_id: comment.id,
                     owner: contextOwner,
@@ -9943,7 +9947,7 @@ class GitHubPRCommenter {
             }
         }
         core.debug('Creating a new comment...');
-        this.octokit.rest.issues.createComment({
+        await this.octokit.rest.issues.createComment({
             issue_number: contextIssue,
             owner: contextOwner,
             repo: contextRepo,
@@ -10117,6 +10121,7 @@ var Input;
     Input["MODES"] = "modes";
     Input["GITHUB_TOKEN"] = "token";
     Input["FAIL_ON_ERROR"] = "fail-on-error";
+    Input["COMMENT_PR_ON_SUCCESS"] = "comment-pr-on-success";
 })(Input || (exports.Input = Input = {}));
 var ModeOption;
 (function (ModeOption) {
@@ -10130,7 +10135,8 @@ function gatherInputs() {
     const token = getInputToken();
     const showFilename = getInputShowFilename();
     const failOnError = getInputFailOnError();
-    return { file, modes, token, showFilename, failOnError };
+    const commentPrOnSuccess = getInputCommentPrOnSuccess();
+    return { file, modes, token, showFilename, failOnError, commentPrOnSuccess };
 }
 exports.gatherInputs = gatherInputs;
 function getInputFile() {
@@ -10177,6 +10183,14 @@ function getInputToken() {
 function getInputFailOnError() {
     return core.getBooleanInput(Input.FAIL_ON_ERROR);
 }
+function getInputCommentPrOnSuccess() {
+    const input = core.getInput(Input.COMMENT_PR_ON_SUCCESS)?.toLowerCase();
+    if (!input)
+        return true;
+    return input === 'true';
+}
+// Add methods for your extra inputs
+// Pattern: function getInput<input-name>(): <type>
 
 
 /***/ }),
@@ -10193,6 +10207,7 @@ const SUCCESS_SUMMARY = 'KubeLinter - No invalid manifests!';
 const REPORT_CONTENT_TRUNCATED = '**Note: Report truncated due to character limit constraints!**';
 const MAX_CHECK_BODY_SIZE = 65535;
 class CheckReporter {
+    gitHubCheck;
     maxSize = MAX_CHECK_BODY_SIZE;
     static getSummary(summary, truncated) {
         const result = truncated
@@ -10200,7 +10215,6 @@ class CheckReporter {
             : [summary];
         return result.join('\n');
     }
-    gitHubCheck;
     constructor(gitHubCheck) {
         this.gitHubCheck = gitHubCheck;
     }
@@ -10226,13 +10240,17 @@ exports.CheckReporter = CheckReporter;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommentReporter = void 0;
 class CommentReporter {
-    maxSize = null;
     gitHubPRCommenter;
-    constructor(gitHubPRCommenter) {
+    commentOnSuccess;
+    maxSize = null;
+    constructor(gitHubPRCommenter, commentOnSuccess) {
         this.gitHubPRCommenter = gitHubPRCommenter;
+        this.commentOnSuccess = commentOnSuccess;
     }
     async report(data) {
-        await this.gitHubPRCommenter.comment(data.report);
+        if (data.failed || this.commentOnSuccess) {
+            await this.gitHubPRCommenter.comment(data.report);
+        }
     }
 }
 exports.CommentReporter = CommentReporter;
@@ -10325,8 +10343,8 @@ exports.KubeLinterReportGenerator = KubeLinterReportGenerator;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SummaryReporter = void 0;
 class SummaryReporter {
-    maxSize = null;
     theSummary;
+    maxSize = null;
     constructor(theSummary) {
         this.theSummary = theSummary;
     }

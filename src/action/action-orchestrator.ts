@@ -18,27 +18,31 @@ import { KubeLinterResult } from '../model/kube-linter'
 const FILE_ENCODING = 'utf-8'
 
 export class ActionOrchestrator {
+  private octokit!: InstanceType<typeof GitHub>
   private gitHubCheck: GitHubCheck | null = null
-  private inputs?: Inputs
+  private inputs!: Inputs
 
   private getOctokit(): InstanceType<typeof GitHub> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
-    return github.getOctokit(this.inputs!!.token)
+    return github.getOctokit(this.inputs.token)
   }
 
-  private async getReporter(mode: ModeOption): Promise<Reporter> {
+  private async getReporter(
+    mode: ModeOption,
+    commentPrOnSuccess: boolean
+  ): Promise<Reporter> {
     switch (mode) {
       case ModeOption.PR_COMMENT:
         return new CommentReporter(
           new GitHubPRCommenter(
             APPLICATION_NAME,
-            this.getOctokit(),
+            this.octokit,
             extendedContext
-          )
+          ),
+          commentPrOnSuccess
         )
       case ModeOption.CHECK: {
         const gitHubCheckCreator = new GitHubCheckCreator(
-          this.getOctokit(),
+          this.octokit,
           extendedContext
         )
         this.gitHubCheck = await gitHubCheckCreator.create(CHECK_NAME)
@@ -50,18 +54,17 @@ export class ActionOrchestrator {
   }
 
   private async getReporters(): Promise<Reporter[]> {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion,@typescript-eslint/no-extra-non-null-assertion
-    const modes = this.inputs!!.modes
+    const modes = this.inputs.modes
+    const commentPrOnSuccess = this.inputs.commentPrOnSuccess
     const result: Reporter[] = []
     for (const mode of modes) {
-      result.push(await this.getReporter(mode))
+      result.push(await this.getReporter(mode, commentPrOnSuccess))
     }
     return result
   }
 
   private async parseReport(): Promise<KubeLinterResult> {
-    // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
-    const fileContents = await fs.readFile(this.inputs!!.file, {
+    const fileContents = await fs.readFile(this.inputs.file, {
       encoding: FILE_ENCODING
     })
     return JSON.parse(fileContents) as KubeLinterResult
@@ -80,14 +83,13 @@ export class ActionOrchestrator {
 
       if (reportResult === undefined) {
         reportResult = await reportGenerator.generateReport(reportData, {
-          // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
-          showFilename: this.inputs!!.showFilename,
-          maxSize: reporter.maxSize ?? undefined
+          maxSize: reporter.maxSize ?? undefined,
+          showFilename: this.inputs.showFilename
         })
         reportResults.set(reporter.maxSize, reportResult)
       }
 
-      failed &&= reportResult.failed
+      failed ||= reportResult.failed
 
       await reporter.report(reportResult)
     }
@@ -97,6 +99,7 @@ export class ActionOrchestrator {
 
   async execute(inputs: Inputs): Promise<number> {
     this.inputs = inputs
+    this.octokit = this.getOctokit()
     const reporters = await this.getReporters()
     try {
       const report = await this.parseReport()
