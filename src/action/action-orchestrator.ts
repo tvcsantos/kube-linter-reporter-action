@@ -64,7 +64,6 @@ export class ActionOrchestrator {
   }
 
   private async parseReport(): Promise<KubeLinterResult> {
-    // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
     const fileContents = await fs.readFile(this.inputs.file, {
       encoding: FILE_ENCODING
     })
