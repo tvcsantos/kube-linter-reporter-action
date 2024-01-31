@@ -9707,7 +9707,6 @@ class ActionOrchestrator {
         return result;
     }
     async parseReport() {
-        // eslint-disable-next-line @typescript-eslint/no-extra-non-null-assertion,@typescript-eslint/no-non-null-assertion
         const fileContents = await promises_1.default.readFile(this.inputs.file, {
             encoding: FILE_ENCODING
         });
