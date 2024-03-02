@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Do KubeLinter report
-        uses: tvcsantos/kube-linter-reporter-action@v2
+        uses: tvcsantos/kube-linter-reporter-action@v3
         with:
           file: /path/to/kube-linter/results/file.json
 ```
@@ -95,7 +95,7 @@ No outputs available.
 
 ## License
 
-The scripts and documentation in this project are released under the [MIT License](LICENSE.md).
+This project is released under the [MIT License](LICENSE.md).
 
 ## Contributions
 
