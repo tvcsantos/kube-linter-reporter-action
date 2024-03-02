@@ -11,6 +11,7 @@ This action aims to provide support for generating reports for [KubeLinter][kube
 checks Kubernetes YAML files and Helm charts to ensure the applications represented in them adhere to best practices.
 
 Several output modes are supported depending on the user input and if the action is run on a pull request:
+
 - `pr-comment` - report will be added as a comment on PR.
 - `check` - report will be added in a GitHub check.
 - `summary` - report will be added as a summary.
@@ -51,7 +52,7 @@ When running in `summary` mode a summary will be created with the following if n
 
 ![summary-ok](docs/images/summary_ok_example.png)
 
-And in case of errors with the following 
+And in case of errors with the following
 
 ![summary-error](docs/images/summary_error_example.png)
 
@@ -73,12 +74,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Do KubeLinter report
-        uses: tvcsantos/kube-linter-reporter-action@v2
+        uses: tvcsantos/kube-linter-reporter-action@v3
         with:
           file: /path/to/kube-linter/results/file.json
 ```
 
 ### Inputs
+
+<!-- markdownlint-disable MD033 -->
 
 | Input                   | Type         | Required | Default Value                                                                                 | Description                                                                                                                                         |
 |-------------------------|--------------|----------|-----------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -89,13 +92,15 @@ jobs:
 | `fail-on-error`         | Boolean      | No       | `false`                                                                                       | Fail the action if errors are found on the report.                                                                                                  |
 | `comment-pr-on-success` | Boolean      | No       | `true`                                                                                        | Comment on PR even if there are no findings.                                                                                                        |
 
+<!-- markdownlint-enable MD033 -->
+
 ### Outputs
 
 No outputs available.
 
 ## License
 
-The scripts and documentation in this project are released under the [MIT License](LICENSE.md).
+This project is released under the [MIT License](LICENSE.md).
 
 ## Contributions
 
