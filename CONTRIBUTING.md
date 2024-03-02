@@ -327,7 +327,7 @@ This guide was adapted from [weallcontribute](https://www.npmjs.com/package/weal
 [conventional-commits]: https://www.conventionalcommits.org/
 [keep-a-changelog]: https://keepachangelog.com/
 [gitflow]: https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow
-[issue-tracker]: https://github.com/tvcsantos/tool-reporter-action-template/issues
-[pull-requests]: https://github.com/tvcsantos/tool-reporter-action-template/pulls
-[support-open-issues]: https://github.com/tvcsantos/tool-reporter-action-template/issues?q=is%3Aopen+is%3Aissue+label%3Asupport
-[unlabeled-open-issues]: https://github.com/tvcsantos/tool-reporter-action-template/issues?q=is%3Aopen+is%3Aissue+no%3Alabel
+[issue-tracker]: https://github.com/tvcsantos/kube-linter-reporter-action/issues
+[pull-requests]: https://github.com/tvcsantos/kube-linter-reporter-action/pulls
+[support-open-issues]: https://github.com/tvcsantos/kube-linter-reporter-action/issues?q=is%3Aopen+is%3Aissue+label%3Asupport
+[unlabeled-open-issues]: https://github.com/tvcsantos/kube-linter-reporter-action/issues?q=is%3Aopen+is%3Aissue+no%3Alabel
